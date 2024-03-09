@@ -2,30 +2,24 @@ name: CI
 
 on: [push, workflow_dispatch]
 
-jobs:
-  build:
-    runs-on: windows-latest
+ jobs:
+   build:
 
-    steps:
-      - name: Download ngrok
-        run: Invoke-WebRequest -Uri https://bin.equinox.io/c/bwy%20j1mowac/ngrok-v?-stable-windows-amd64.zip -OutFile ngrok.zip
+   runs-on: windows- latest
 
-      - name: Extract ngrok
-        run: Expand-Archive ngrok.zip -DestinationPath .\.ngrok
-
-      - name: Authenticate with ngrok (Secure Way)
-        # Use a secret for ngrok auth token
-        run: .\.ngrok\ngrok.exe authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      - env:
-          # Optional environment variables for ngrok configuration (if needed)
-          NGROK_REGION: ${{ secrets.NGROK_REGION }}  # Example: us
-          # ... other ngrok environment variables
-
-      - name: Use ngrok (Example: Create an SSH tunnel)
-        # Replace with your specific ngrok command (e.g., ngrok http 8080)
-        run: .\.ngrok\ngrok.exe ssh -c "command to run"
-
-    env:
-      # Securely store ngrok auth token as a GitHub Secret
-      nGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+  steps:
+  name: Download
+  run: invoke-WebRequest https://bin.equinox.io/c/BNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+  name: Extrect
+  run: Expand-Archive ngrok.zip
+  name: Auth
+  run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+  env:
+  NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+  name: Enable TS
+  run: Set_ItemProperty -path 'HKLM:\System\CurrentControlSet\Control\Terminal Servr' -name "fDenyTSConnections" -Value 0
+  run: Enable-NetFirewallRule -DisplayGroup "Remote DesKtop"
+  run: Set-ItemProperty _peth 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+  run: Set-LocalUser -NME "runneradmin" -Password (ConvertTo-SecureString _AsPlainText "p@ssw0rd!" -Force)
+  name: Create Tunnel
+  run: .\ngrok\ngrok.exe tcp 3389
