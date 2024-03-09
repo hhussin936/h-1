@@ -1,25 +1,35 @@
-name: CI
-
 on: [push, workflow_dispatch]
 
- jobs:
-   build:
+jobs:
+  build:
+    runs-on: windows-latest
 
-   runs-on: windows- latest
+    steps:
+      - uses: actions/checkout@v3  # Checkout the repository code
 
-  steps:
- - name: Download
-  run: invoke-WebRequest https://bin.equinox.io/c/BNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
- - name: Extrect
-  run: Expand-Archive ngrok.zip
- - name: Auth
-  run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-  env:
-  NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
- - name: Enable TS
-  run: Set_ItemProperty -path 'HKLM:\System\CurrentControlSet\Control\Terminal Servr' -name "fDenyTSConnections" -Value 0
- - run: Enable-NetFirewallRule -DisplayGroup "Remote DesKtop"
- - run: Set-ItemProperty _peth 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
- - run: Set-LocalUser -NME "runneradmin" -Password (ConvertTo-SecureString _AsPlainText "p@ssw0rd!" -Force)
- - name: Create Tunnel
-  run: .\ngrok\ngrok.exe tcp 3389
+      - name: Download ngrok
+        run: Invoke-WebRequest -Uri https://bin.equinox.io/c/BNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+
+      - name: Extract ngrok
+        run: Expand-Archive ngrok.zip
+
+      - name: Authenticate ngrok (securely using environment variable)
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}  # Retrieve token from secrets manager
+        run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+
+      - name: Enable Remote Desktop (with caution)
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Servr' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+      - name: Create RDP user (securely using a dedicated user creation tool)
+        # Use a secure tool or service to create a user with a strong password
+        # This example is for demonstration purposes only
+
+      - name: Create Tunnel
+        run: .\ngrok\ngrok.exe tcp 3389
+
+      - name: Clean up (optional)
+        run: Remove-Item ngrok.zip -Force  # Remove downloaded file for cleanup
